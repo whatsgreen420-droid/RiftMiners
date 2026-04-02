@@ -93,56 +93,105 @@ end)
 ------------------------------------------------------------------------
 -- TELEPORTERS
 ------------------------------------------------------------------------
--- Mine portal touch → teleport to mine
+-- TELEPORTERS (Touched + ProximityPrompt for all platforms)
+------------------------------------------------------------------------
+local function teleportToMine(p)
+	local char = p.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local mineDepthZ = CHUNK_D * BLOCK_SIZE
+		char.HumanoidRootPart.CFrame = CFrame.new(MINE_ENTRANCE + Vector3.new(0, 5, mineDepthZ/2 + 15))
+		NotifyEvent:FireClient(p, {
+			Title = "⛏️ Welcome to the Mines!",
+			Message = "Mine ores and sell at the surface!",
+			Duration = 4,
+			Color = Color3.fromRGB(138, 43, 226),
+		})
+	end
+end
+
+local function teleportToHub(p)
+	local char = p.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		char.HumanoidRootPart.CFrame = CFrame.new(GameConfig.World.Hub.SpawnPosition + Vector3.new(0, 5, 0))
+		NotifyEvent:FireClient(p, {
+			Title = "🏠 Back on the Surface!",
+			Message = "Sell your ores and upgrade your gear!",
+			Duration = 3,
+			Color = Color3.fromRGB(0, 200, 100),
+		})
+	end
+end
+
 task.spawn(function()
 	task.wait(3)
+
+	-- Mine portal
 	local portal = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("MinePortal")
 	if portal then
 		local debounce = {}
+
+		-- Touched (PC walk-through)
 		portal.Touched:Connect(function(hit)
 			local p = Players:GetPlayerFromCharacter(hit.Parent)
 			if p and not debounce[p] then
 				debounce[p] = true
-				local char = p.Character
-				if char and char:FindFirstChild("HumanoidRootPart") then
-					-- Teleport to mine entrance platform
-					local mineDepthZ = CHUNK_D * BLOCK_SIZE
-					char.HumanoidRootPart.CFrame = CFrame.new(MINE_ENTRANCE + Vector3.new(0, 5, mineDepthZ/2 + 15))
-					NotifyEvent:FireClient(p, {
-						Title = "⛏️ Welcome to the Mines!",
-						Message = "Mine ores and sell at the surface! Use the green portal to return.",
-						Duration = 4,
-						Color = Color3.fromRGB(138, 43, 226),
-					})
-				end
+				teleportToMine(p)
 				task.wait(2)
 				debounce[p] = nil
 			end
 		end)
+
+		-- ProximityPrompt (mobile/console)
+		local prompt = portal:FindFirstChildOfClass("ProximityPrompt")
+		if prompt then
+			prompt.Triggered:Connect(function(p)
+				if not debounce[p] then
+					debounce[p] = true
+					teleportToMine(p)
+					task.wait(2)
+					debounce[p] = nil
+				end
+			end)
+		end
+	else
+		warn("[RiftMiners] MinePortal not found!")
 	end
 
-	-- Return portal in mine → teleport back to hub
+	-- Return portal in mine
 	local returnPortal = workspace:FindFirstChild("Mine") and workspace.Mine:FindFirstChild("ReturnPortal")
 	if returnPortal then
 		local debounce2 = {}
+
 		returnPortal.Touched:Connect(function(hit)
 			local p = Players:GetPlayerFromCharacter(hit.Parent)
 			if p and not debounce2[p] then
 				debounce2[p] = true
-				local char = p.Character
-				if char and char:FindFirstChild("HumanoidRootPart") then
-					char.HumanoidRootPart.CFrame = CFrame.new(GameConfig.World.Hub.SpawnPosition + Vector3.new(0, 5, 0))
-					NotifyEvent:FireClient(p, {
-						Title = "🏠 Back on the Surface!",
-						Message = "Sell your ores and upgrade your gear!",
-						Duration = 3,
-						Color = Color3.fromRGB(0, 200, 100),
-					})
-				end
+				teleportToHub(p)
 				task.wait(2)
 				debounce2[p] = nil
 			end
 		end)
+
+		-- ProximityPrompt on return portal
+		local rpPrompt = returnPortal:FindFirstChildOfClass("ProximityPrompt")
+		if not rpPrompt then
+			rpPrompt = Instance.new("ProximityPrompt")
+			rpPrompt.ActionText = "Return"
+			rpPrompt.ObjectText = "🏠 Surface"
+			rpPrompt.MaxActivationDistance = 12
+			rpPrompt.RequiresLineOfSight = false
+			rpPrompt.Parent = returnPortal
+		end
+		rpPrompt.Triggered:Connect(function(p)
+			if not debounce2[p] then
+				debounce2[p] = true
+				teleportToHub(p)
+				task.wait(2)
+				debounce2[p] = nil
+			end
+		end)
+	else
+		warn("[RiftMiners] ReturnPortal not found!")
 	end
 end)
 

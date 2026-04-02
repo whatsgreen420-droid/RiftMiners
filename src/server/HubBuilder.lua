@@ -141,6 +141,15 @@ function HubBuilder.Build()
 	addLight(portal, Color3.fromRGB(138,43,226), 45, 3)
 	addParticles(portal, Color3.fromRGB(138,43,226), Color3.fromRGB(255,100,255), 40)
 
+	-- ProximityPrompt for mobile/console mine entry
+	local minePrompt = Instance.new("ProximityPrompt")
+	minePrompt.ActionText = "Enter Mine"
+	minePrompt.ObjectText = "⛏️ The Mines"
+	minePrompt.MaxActivationDistance = 15
+	minePrompt.RequiresLineOfSight = false
+	minePrompt.HoldDuration = 0
+	minePrompt.Parent = portal
+
 	-- ===== PICKAXE SHOP (LEFT of mine portal) =====
 	local shopPos = cfg.ShopPosition
 	makePart({Name="PickaxeShopFloor", Size=Vector3.new(22,1,22), Position=shopPos,

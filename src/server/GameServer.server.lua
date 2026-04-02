@@ -43,6 +43,16 @@ local CHUNK_D = GameConfig.World.Mine.ChunkDepth
 
 print("[RiftMiners] World generation complete!")
 
+-- Quest system bindable events (QuestManager.server.lua listens to these)
+local oreMinedBE = Instance.new("BindableEvent")
+oreMinedBE.Name = "OreMined"; oreMinedBE.Parent = ReplicatedStorage
+local oreSoldBE = Instance.new("BindableEvent")
+oreSoldBE.Name = "OreSold"; oreSoldBE.Parent = ReplicatedStorage
+local depthReachedBE = Instance.new("BindableEvent")
+depthReachedBE.Name = "DepthReached"; depthReachedBE.Parent = ReplicatedStorage
+local playerPrestigedBE = Instance.new("BindableEvent")
+playerPrestigedBE.Name = "PlayerPrestiged"; playerPrestigedBE.Parent = ReplicatedStorage
+
 ------------------------------------------------------------------------
 -- PLAYERS
 ------------------------------------------------------------------------
@@ -177,6 +187,9 @@ MineBlockEvent.OnServerEvent:Connect(function(player, block)
 				Duration = 1.5,
 				Color = GameConfig.RarityColors[oreRarity] or Color3.new(1,1,1),
 			})
+			-- Fire quest event
+			oreMinedBE:Fire(player, oreType, 1)
+
 			-- Track depth
 			local depth = block:GetAttribute("Depth") or 0
 			local data = PlayerDataManager.Data[player]
@@ -186,6 +199,8 @@ MineBlockEvent.OnServerEvent:Connect(function(player, block)
 				if ls and ls:FindFirstChild("MaxDepth") then
 					ls.MaxDepth.Value = depth
 				end
+				-- Fire depth quest event
+				depthReachedBE:Fire(player, depth)
 			end
 		else
 			NotifyEvent:FireClient(player, {
@@ -246,6 +261,7 @@ SellOresEvent.OnServerEvent:Connect(function(player)
 			Duration = 3,
 			Color = Color3.fromRGB(0, 255, 100),
 		})
+		oreSoldBE:Fire(player, totalValue)
 	else
 		NotifyEvent:FireClient(player, {
 			Title = "Empty Backpack",
@@ -313,6 +329,12 @@ PrestigeEvent.OnServerEvent:Connect(function(player)
 		Message = msg, Duration = ok and 5 or 2,
 		Color = ok and Color3.fromRGB(255,200,50) or Color3.fromRGB(255,80,80),
 	})
+	if ok then
+		local data = PlayerDataManager.Data[player]
+		if data then
+			playerPrestigedBE:Fire(player, data.PrestigeLevel)
+		end
+	end
 end)
 
 ------------------------------------------------------------------------

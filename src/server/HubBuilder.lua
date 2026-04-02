@@ -118,10 +118,8 @@ function HubBuilder.Build()
 	local pM = Enum.Material.Cobblestone
 	-- Spawn to mine
 	makePart({Name="PathToMine", Size=Vector3.new(8,0.5,60), Position=Vector3.new(0,0.3,-30), Color=pC, Material=pM, Parent=hub})
-	-- Left to pickaxe shop
-	makePart({Name="PathToPickaxe", Size=Vector3.new(20,0.5,8), Position=Vector3.new(-20,0.3,-55), Color=pC, Material=pM, Parent=hub})
-	-- Right to backpack shop
-	makePart({Name="PathToBackpack", Size=Vector3.new(20,0.5,8), Position=Vector3.new(20,0.3,-55), Color=pC, Material=pM, Parent=hub})
+	-- Path to unified tool shop (single NPC for pickaxes + backpacks)
+	makePart({Name="PathToToolShop", Size=Vector3.new(26,0.5,8), Position=Vector3.new(-24,0.3,-55), Color=pC, Material=pM, Parent=hub})
 
 	-- ===== MINE ENTRANCE PORTAL (center) =====
 	local mePos = cfg.MineEntrancePosition
@@ -150,35 +148,47 @@ function HubBuilder.Build()
 	minePrompt.HoldDuration = 0
 	minePrompt.Parent = portal
 
-	-- ===== PICKAXE SHOP (LEFT of mine portal) =====
-	local shopPos = cfg.ShopPosition
-	makePart({Name="PickaxeShopFloor", Size=Vector3.new(22,1,22), Position=shopPos,
-		Color=Color3.fromRGB(100,80,60), Material=Enum.Material.WoodPlanks, Parent=hub})
-	makePart({Name="PSBack", Size=Vector3.new(22,14,1), Position=shopPos+Vector3.new(0,7,-11),
-		Color=Color3.fromRGB(90,70,50), Material=Enum.Material.WoodPlanks, Parent=hub})
-	makePart({Name="PSLeft", Size=Vector3.new(1,14,22), Position=shopPos+Vector3.new(-11,7,0),
-		Color=Color3.fromRGB(90,70,50), Material=Enum.Material.WoodPlanks, Parent=hub})
-	local psSign = makePart({Name="PSSign", Size=Vector3.new(12,4,1), Position=shopPos+Vector3.new(0,14,11),
-		Color=Color3.fromRGB(50,30,15), Material=Enum.Material.Wood, Parent=hub})
-	addLabel(psSign, "⛏️ PICKAXE SHOP", Color3.fromRGB(255,215,0), Vector3.new(0,2,0))
-	addLight(makePart({Name="PSLight", Size=Vector3.new(1,1,1), Position=shopPos+Vector3.new(0,12,0),
-		Transparency=1, CanCollide=false, Parent=hub}), Color3.fromRGB(255,200,100), 30)
-	makeTrigger("PickaxeShopTrigger", Vector3.new(24,16,24), shopPos+Vector3.new(0,7,0), "PickaxeShop", hub)
+	-- Gate worker for mine reset/rebuild requests
+	local gateNpcPos = mePos + Vector3.new(9, 2.6, 6)
+	local gateNpcBody = makePart({Name="GateWorkerBody", Size=Vector3.new(2.4,4,1.8), Position=gateNpcPos,
+		Color=Color3.fromRGB(90,110,130), Material=Enum.Material.SmoothPlastic, Parent=hub})
+	gateNpcBody.CFrame = CFrame.new(gateNpcPos) * CFrame.Angles(0, math.rad(-150), 0)
+	local gateNpcHead = makePart({Name="GateWorkerHead", Size=Vector3.new(1.8,1.8,1.8), Position=gateNpcPos+Vector3.new(0,2.7,0),
+		Color=Color3.fromRGB(245,220,190), Material=Enum.Material.SmoothPlastic, Parent=hub})
+	addLabel(gateNpcHead, "👷 Friendly Miner", Color3.fromRGB(255,255,255), Vector3.new(0,2.2,0))
+	local resetTrigger = makeTrigger("MineResetTrigger", Vector3.new(6,8,6), gateNpcPos+Vector3.new(0,2,0), "ResetMine", hub)
+	local resetPrompt = Instance.new("ProximityPrompt")
+	resetPrompt.ActionText = "Request Reset"
+	resetPrompt.ObjectText = "Mine Safety Gate"
+	resetPrompt.MaxActivationDistance = 10
+	resetPrompt.RequiresLineOfSight = false
+	resetPrompt.HoldDuration = 0
+	resetPrompt.Parent = resetTrigger
 
-	-- ===== BACKPACK SHOP (RIGHT of mine portal) =====
-	local bpPos = cfg.BackpackShopPosition
-	makePart({Name="BackpackShopFloor", Size=Vector3.new(22,1,22), Position=bpPos,
+	-- ===== UNIFIED TOOL SHOP (single NPC opposite Miner Mike / sell side) =====
+	local shopAnchor = cfg.SellPadPosition
+	local toolShopPos = shopAnchor + Vector3.new(-28, 0, 0)
+
+	makePart({Name="ToolShopPad", Size=Vector3.new(14,1,14), Position=toolShopPos,
+		Color=Color3.fromRGB(95,75,58), Material=Enum.Material.WoodPlanks, Parent=hub})
+	local toolStand = makePart({Name="ToolShopStand", Size=Vector3.new(12,8,2), Position=toolShopPos+Vector3.new(0,4,-5),
 		Color=Color3.fromRGB(80,60,45), Material=Enum.Material.WoodPlanks, Parent=hub})
-	makePart({Name="BPBack", Size=Vector3.new(22,14,1), Position=bpPos+Vector3.new(0,7,-11),
-		Color=Color3.fromRGB(80,60,45), Material=Enum.Material.WoodPlanks, Parent=hub})
-	makePart({Name="BPRight", Size=Vector3.new(1,14,22), Position=bpPos+Vector3.new(11,7,0),
-		Color=Color3.fromRGB(80,60,45), Material=Enum.Material.WoodPlanks, Parent=hub})
-	local bpSign = makePart({Name="BPSign", Size=Vector3.new(12,4,1), Position=bpPos+Vector3.new(0,14,11),
+	local toolSign = makePart({Name="ToolShopSign", Size=Vector3.new(10,3,1), Position=toolShopPos+Vector3.new(0,9,-5),
 		Color=Color3.fromRGB(50,30,15), Material=Enum.Material.Wood, Parent=hub})
-	addLabel(bpSign, "🎒 BACKPACK SHOP", Color3.fromRGB(100,200,255), Vector3.new(0,2,0))
-	addLight(makePart({Name="BPLight", Size=Vector3.new(1,1,1), Position=bpPos+Vector3.new(0,12,0),
-		Transparency=1, CanCollide=false, Parent=hub}), Color3.fromRGB(100,180,255), 25)
-	makeTrigger("BackpackShopTrigger", Vector3.new(24,16,24), bpPos+Vector3.new(0,7,0), "BackpackShop", hub)
+	addLabel(toolSign, "🛒 TOOLS SHOP", Color3.fromRGB(255,220,120), Vector3.new(0,2,0))
+
+	-- Simple shopkeeper mannequin
+	local keeperBody = makePart({Name="ToolShopkeeper", Size=Vector3.new(2.2,4,1.6), Position=toolShopPos+Vector3.new(0,3,-3),
+		Color=Color3.fromRGB(230,210,180), Material=Enum.Material.SmoothPlastic, Parent=hub})
+	keeperBody.CFrame = CFrame.new(keeperBody.Position) * CFrame.Angles(0, math.rad(180), 0)
+	local keeperHead = makePart({Name="ToolShopkeeperHead", Size=Vector3.new(1.8,1.8,1.8), Position=toolShopPos+Vector3.new(0,5.7,-3),
+		Color=Color3.fromRGB(245,220,190), Material=Enum.Material.SmoothPlastic, Parent=hub})
+	addLabel(keeperHead, "🧑‍🏭 Tool Dealer", Color3.fromRGB(255,255,255), Vector3.new(0,2,0))
+
+	local toolTrigger = makeTrigger("ToolShopTrigger", Vector3.new(14,10,14), toolShopPos+Vector3.new(0,5,0), "ToolShop", hub)
+	addLight(toolTrigger, Color3.fromRGB(255,200,120), 22, 1.5)
+	-- Secondary trigger at same NPC so backpacks are in the same shop spot
+	makeTrigger("ToolShopBackpackTrigger", Vector3.new(10,8,10), toolShopPos+Vector3.new(0,4.5,0), "BackpackShop", hub)
 
 	-- ===== SELL PAD =====
 	local sellPos = cfg.SellPadPosition
@@ -214,28 +224,30 @@ function HubBuilder.Build()
 			Color=Color3.fromRGB(60,0,90), Material=Enum.Material.Marble, Parent=hub})
 	end
 
-	-- ===== PREMIUM SHOP — Individual pedestals facing LEFT (-X direction) =====
-	local premBase = cfg.PremiumShopPosition  -- 108.054, 33.348, 2.703
+	-- ===== PREMIUM SHOP — moved to rightmost edge block run path =====
+	local premBase = Vector3.new(108.313, 17.243, 0.448)
+	local premFacingYaw = math.rad(-15)
+	local premRight = CFrame.Angles(0, premFacingYaw, 0).RightVector
+	local premForward = CFrame.Angles(0, premFacingYaw, 0).LookVector
 	local gamepasses = GameConfig.Gamepasses
-	local spacing = 8  -- tighter spacing to fit inside building
-	local totalZ = (#gamepasses - 1) * spacing
-	local startZ = premBase.Z - totalZ / 2  -- center the group
+	local spacing = 7
+	local totalAlongRight = (#gamepasses - 1) * spacing
+	local startOffset = -totalAlongRight * 0.5
 
 	-- Title sign
 	local premSign = makePart({Name="PremiumSign", Size=Vector3.new(1,1,1),
-		Position=premBase + Vector3.new(-8, 8, 0),  -- moved forward (left)
+		Position=premBase + premForward * -5 + Vector3.new(0, 8, 0),
 		Transparency=1, CanCollide=false, Parent=hub})
 	addLabel(premSign, "💎 PREMIUM SHOP 💎", Color3.fromRGB(255,215,0), Vector3.new(0,2,0))
 
 	for i, gp in ipairs(gamepasses) do
-		-- Line up along Z axis, centered, moved forward (-X) into the building
-		local pedPos = Vector3.new(premBase.X - 5, premBase.Y, startZ + (i-1) * spacing)
+		local lateralOffset = startOffset + (i - 1) * spacing
+		local pedPos = premBase + premRight * lateralOffset
 
-		-- Pedestal (rotated to face -X)
+		-- Pedestal aligned to requested yaw (0, -15, 0)
 		local pedestal = makePart({Name="Pedestal_"..gp.Name, Size=Vector3.new(5,3,5), Position=pedPos,
 			Color=Color3.fromRGB(50,50,80), Material=Enum.Material.Marble, Parent=hub})
-		-- Face left: rotate 90 degrees around Y
-		pedestal.CFrame = CFrame.new(pedPos) * CFrame.Angles(0, math.rad(90), 0)
+		pedestal.CFrame = CFrame.new(pedPos) * CFrame.Angles(0, premFacingYaw, 0)
 
 		-- Glowing orb
 		local orbColor

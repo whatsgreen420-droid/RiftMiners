@@ -26,6 +26,7 @@ local BuyBackpackEvent   = makeRemote("BuyBackpack")
 local PrestigeEvent      = makeRemote("Prestige")
 local TeleportToMineEvent = makeRemote("TeleportToMine")
 local TeleportToHubEvent  = makeRemote("TeleportToHub")
+local RequestMineResetEvent = makeRemote("RequestMineReset")
 local NotifyEvent        = makeRemote("Notify")
 local OpenShopEvent      = makeRemote("OpenShop")
 local GetPlayerDataFunc  = makeRemote("GetPlayerData", "RemoteFunction")
@@ -207,6 +208,22 @@ TeleportToHubEvent.OnServerEvent:Connect(function(player)
 	local char = player.Character
 	if char and char:FindFirstChild("HumanoidRootPart") then
 		char.HumanoidRootPart.CFrame = CFrame.new(GameConfig.World.Hub.SpawnPosition)
+	end
+end)
+
+RequestMineResetEvent.OnServerEvent:Connect(function(player)
+	if workspace:FindFirstChild("Mine") then
+		workspace.Mine:Destroy()
+	end
+	mineFolder = MineGenerator.Initialize()
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		NotifyEvent:FireClient(p, {
+			Title = "⛏️ Mine Rebuilt",
+			Message = player.Name .. " requested a safety reset. The mine is open again!",
+			Duration = 4,
+			Color = Color3.fromRGB(255, 220, 120),
+		})
 	end
 end)
 

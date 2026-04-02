@@ -10,6 +10,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
+local isTouchDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 -- Remote events
 local MineBlockEvent = ReplicatedStorage:WaitForChild("MineBlock")
@@ -39,38 +40,54 @@ local function getTargetBlock()
 	return nil
 end
 
--- Mining on click
-mouse.Button1Down:Connect(function()
-	local now = tick()
-	if now - lastMineTime < miningCooldown then return end
-	lastMineTime = now
+-- Mining on click (desktop)
+if not isTouchDevice then
+	mouse.Button1Down:Connect(function()
+		local now = tick()
+		if now - lastMineTime < miningCooldown then return end
+		lastMineTime = now
 
-	local block = getTargetBlock()
-	if block then
-		MineBlockEvent:FireServer(block)
+		local block = getTargetBlock()
+		if block then
+			MineBlockEvent:FireServer(block)
 
-		-- Visual feedback: flash the block
-		local originalColor = block.Color
-		block.Color = Color3.new(1, 1, 1)
-		task.delay(0.1, function()
-			if block and block.Parent then
-				block.Color = originalColor
-			end
-		end)
-	end
-end)
+			-- Visual feedback: flash the block
+			local originalColor = block.Color
+			block.Color = Color3.new(1, 1, 1)
+			task.delay(0.1, function()
+				if block and block.Parent then
+					block.Color = originalColor
+				end
+			end)
+		end
+	end)
+end
 
 -- Hold to continuously mine
 local isHolding = false
 
+if isTouchDevice then
+	UserInputService.TouchTap:Connect(function(_, processed)
+		if processed then return end
+		local now = tick()
+		if now - lastMineTime < miningCooldown then return end
+		lastMineTime = now
+		local block = getTargetBlock()
+		if block then
+			MineBlockEvent:FireServer(block)
+		end
+	end)
+end
+
 UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
+	if processed or isTouchDevice then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		isHolding = true
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
+	if isTouchDevice then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		isHolding = false
 	end
@@ -228,6 +245,7 @@ crosshair.Position = UDim2.new(0.5, -2, 0.5, -2)
 crosshair.BackgroundColor3 = Color3.new(1, 1, 1)
 crosshair.BorderSizePixel = 0
 crosshair.Parent = notifGui
+crosshair.Visible = not isTouchDevice
 
 local crossCorner = Instance.new("UICorner")
 crossCorner.CornerRadius = UDim.new(1, 0)

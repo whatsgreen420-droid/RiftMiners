@@ -16,6 +16,7 @@ local GetShopDataFunc = ReplicatedStorage:WaitForChild("GetShopData")
 local GetPlayerDataFunc = ReplicatedStorage:WaitForChild("GetPlayerData")
 local SellOresEvent = ReplicatedStorage:WaitForChild("SellOres")
 local PrestigeEvent = ReplicatedStorage:WaitForChild("Prestige")
+local RequestMineResetEvent = ReplicatedStorage:WaitForChild("RequestMineReset")
 
 ------------------------------------------------------------------------
 -- SHOP SCREEN GUI
@@ -227,6 +228,18 @@ task.spawn(function()
 				prompt.ObjectText = "🎒 Backpack Shop"
 				prompt.Triggered:Connect(function(p)
 					if p == player then openShop("Backpacks", "🎒 BACKPACK SHOP") end
+				end)
+			elseif iType == "ToolShop" then
+				prompt.ActionText = "Browse"
+				prompt.ObjectText = "🛒 Tool Shop"
+				prompt.Triggered:Connect(function(p)
+					if p == player then openShop("Pickaxes", "🛒 TOOLS SHOP (Pickaxes)") end
+				end)
+			elseif iType == "ResetMine" then
+				prompt.ActionText = "Request"
+				prompt.ObjectText = "👷 Mine Reset"
+				prompt.Triggered:Connect(function(p)
+					if p == player then RequestMineResetEvent:FireServer() end
 				end)
 			elseif iType == "PrestigeAltar" then
 				prompt.ActionText = "Prestige"

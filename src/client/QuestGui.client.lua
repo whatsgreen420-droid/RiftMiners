@@ -106,8 +106,8 @@ trackerGui.ResetOnSpawn = false
 trackerGui.Parent = playerGui
 
 local trackerFrame = Instance.new("Frame")
-trackerFrame.Size = UDim2.new(0, 250, 0, 200)
-trackerFrame.Position = UDim2.new(1, -260, 0, 80)
+trackerFrame.Size = UDim2.new(0, 165, 0, 140)
+trackerFrame.Position = UDim2.new(1, -172, 0, 55)
 trackerFrame.BackgroundColor3 = Color3.fromRGB(15, 13, 25)
 trackerFrame.BackgroundTransparency = 0.3
 trackerFrame.BorderSizePixel = 0

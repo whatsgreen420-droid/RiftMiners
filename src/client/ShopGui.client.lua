@@ -1,6 +1,6 @@
 -- ShopGui.client.lua
--- Scrollable shop GUI for Pickaxes, Backpacks. Opens near shop zones.
--- NO upgrade buttons in the mine — players must return to surface.
+-- Scrollable shop GUI using ProximityPrompts (works on mobile, PC, console)
+-- No "Press E" text — uses native Roblox ProximityPrompt system
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,13 +14,11 @@ local BuyPickaxeEvent = ReplicatedStorage:WaitForChild("BuyPickaxe")
 local BuyBackpackEvent = ReplicatedStorage:WaitForChild("BuyBackpack")
 local GetShopDataFunc = ReplicatedStorage:WaitForChild("GetShopData")
 local GetPlayerDataFunc = ReplicatedStorage:WaitForChild("GetPlayerData")
-local NotifyEvent = ReplicatedStorage:WaitForChild("Notify")
 local SellOresEvent = ReplicatedStorage:WaitForChild("SellOres")
-local TeleportToHubEvent = ReplicatedStorage:WaitForChild("TeleportToHub")
 local PrestigeEvent = ReplicatedStorage:WaitForChild("Prestige")
 
 ------------------------------------------------------------------------
--- CREATE THE SHOP SCREEN GUI
+-- SHOP SCREEN GUI
 ------------------------------------------------------------------------
 local shopGui = Instance.new("ScreenGui")
 shopGui.Name = "ShopGui"
@@ -28,28 +26,22 @@ shopGui.ResetOnSpawn = false
 shopGui.Enabled = false
 shopGui.Parent = playerGui
 
--- Main frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 420, 0, 500)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -250)
+mainFrame.Size = UDim2.new(0, 380, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -190, 0.5, -225)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = shopGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
-
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
 local stroke = Instance.new("UIStroke")
 stroke.Color = Color3.fromRGB(138, 43, 226)
 stroke.Thickness = 2
 stroke.Parent = mainFrame
 
--- Title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, 0, 0, 50)
+titleLabel.Size = UDim2.new(1, 0, 0, 45)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "SHOP"
 titleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
@@ -57,12 +49,10 @@ titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
--- Close button
 local closeBtn = Instance.new("TextButton")
-closeBtn.Name = "CloseBtn"
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -45, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Size = UDim2.new(0, 36, 0, 36)
+closeBtn.Position = UDim2.new(1, -40, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.TextScaled = true
@@ -70,57 +60,40 @@ closeBtn.Font = Enum.Font.GothamBold
 closeBtn.BorderSizePixel = 0
 closeBtn.Parent = mainFrame
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
-
 closeBtn.MouseButton1Click:Connect(function()
 	shopGui.Enabled = false
 end)
 
--- Scroll frame for items
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Name = "ItemList"
-scrollFrame.Size = UDim2.new(1, -20, 1, -60)
-scrollFrame.Position = UDim2.new(0, 10, 0, 55)
+scrollFrame.Size = UDim2.new(1, -20, 1, -55)
+scrollFrame.Position = UDim2.new(0, 10, 0, 50)
 scrollFrame.BackgroundTransparency = 1
-scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarThickness = 5
 scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(138, 43, 226)
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.Parent = mainFrame
 
 local listLayout = Instance.new("UIListLayout")
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Padding = UDim.new(0, 6)
+listLayout.Padding = UDim.new(0, 5)
 listLayout.Parent = scrollFrame
-
--- Auto-resize canvas
 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 end)
 
 ------------------------------------------------------------------------
--- RARITY COLORS
-------------------------------------------------------------------------
-local rarityColors = {
-	Common = Color3.fromRGB(180, 180, 180),
-	Uncommon = Color3.fromRGB(30, 200, 30),
-	Rare = Color3.fromRGB(30, 144, 255),
-	Epic = Color3.fromRGB(163, 53, 238),
-	Legendary = Color3.fromRGB(255, 165, 0),
-}
-
-------------------------------------------------------------------------
--- POPULATE SHOP
+-- SHOP FUNCTIONS
 ------------------------------------------------------------------------
 local function clearItems()
-	for _, child in ipairs(scrollFrame:GetChildren()) do
-		if child:IsA("Frame") then child:Destroy() end
+	for _, c in ipairs(scrollFrame:GetChildren()) do
+		if c:IsA("Frame") then c:Destroy() end
 	end
 end
 
-local function formatNumber(n)
-	if n >= 1000000 then
-		return string.format("%.1fM", n / 1000000)
-	elseif n >= 1000 then
-		return string.format("%.1fK", n / 1000)
+local function formatNum(n)
+	if n >= 1000000 then return string.format("%.1fM", n/1000000)
+	elseif n >= 1000 then return string.format("%.1fK", n/1000)
 	end
 	return tostring(n)
 end
@@ -135,74 +108,61 @@ local function openShop(shopType, title)
 
 	for i, item in ipairs(items) do
 		local card = Instance.new("Frame")
-		card.Name = "Item_" .. (item.Name or i)
-		card.Size = UDim2.new(1, 0, 0, 70)
+		card.Size = UDim2.new(1, 0, 0, 65)
 		card.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 		card.BorderSizePixel = 0
 		card.LayoutOrder = i
 		card.Parent = scrollFrame
-
 		Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
 
-		-- Color stripe on left
 		local colorStripe = Instance.new("Frame")
-		colorStripe.Size = UDim2.new(0, 4, 1, -8)
-		colorStripe.Position = UDim2.new(0, 4, 0, 4)
-		colorStripe.BackgroundColor3 = item.Color or rarityColors[item.Rarity or "Common"] or Color3.new(1,1,1)
+		colorStripe.Size = UDim2.new(0, 3, 1, -6)
+		colorStripe.Position = UDim2.new(0, 3, 0, 3)
+		colorStripe.BackgroundColor3 = item.Color or Color3.new(1,1,1)
 		colorStripe.BorderSizePixel = 0
 		colorStripe.Parent = card
-		Instance.new("UICorner", colorStripe).CornerRadius = UDim.new(0, 2)
 
-		-- Item name
-		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Size = UDim2.new(0.55, 0, 0, 25)
-		nameLabel.Position = UDim2.new(0, 15, 0, 5)
-		nameLabel.BackgroundTransparency = 1
-		nameLabel.Text = item.Name
-		nameLabel.TextColor3 = Color3.new(1, 1, 1)
-		nameLabel.TextScaled = true
-		nameLabel.Font = Enum.Font.GothamBold
-		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-		nameLabel.Parent = card
+		local nameL = Instance.new("TextLabel")
+		nameL.Size = UDim2.new(0.55, 0, 0, 22)
+		nameL.Position = UDim2.new(0, 12, 0, 4)
+		nameL.BackgroundTransparency = 1
+		nameL.Text = item.Name
+		nameL.TextColor3 = Color3.new(1,1,1)
+		nameL.TextScaled = true
+		nameL.Font = Enum.Font.GothamBold
+		nameL.TextXAlignment = Enum.TextXAlignment.Left
+		nameL.Parent = card
 
-		-- Stats line
 		local statsText = ""
 		if shopType == "Pickaxes" then
-			statsText = "Power: " .. item.Power .. " | Speed: " .. item.Speed .. "x"
+			statsText = "Power: "..item.Power.." | Speed: "..item.Speed.."x"
 		elseif shopType == "Backpacks" then
-			statsText = "Capacity: " .. formatNumber(item.Capacity)
+			statsText = "Capacity: "..formatNum(item.Capacity)
 		end
 
-		local statsLabel = Instance.new("TextLabel")
-		statsLabel.Size = UDim2.new(0.55, 0, 0, 18)
-		statsLabel.Position = UDim2.new(0, 15, 0, 30)
-		statsLabel.BackgroundTransparency = 1
-		statsLabel.Text = statsText
-		statsLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
-		statsLabel.TextScaled = true
-		statsLabel.Font = Enum.Font.Gotham
-		statsLabel.TextXAlignment = Enum.TextXAlignment.Left
-		statsLabel.Parent = card
+		local statsL = Instance.new("TextLabel")
+		statsL.Size = UDim2.new(0.55, 0, 0, 16)
+		statsL.Position = UDim2.new(0, 12, 0, 27)
+		statsL.BackgroundTransparency = 1
+		statsL.Text = statsText
+		statsL.TextColor3 = Color3.fromRGB(160,160,180)
+		statsL.TextScaled = true
+		statsL.Font = Enum.Font.Gotham
+		statsL.TextXAlignment = Enum.TextXAlignment.Left
+		statsL.Parent = card
 
-		-- Check ownership
-		local owned = false
-		local equipped = false
+		local owned, equipped = false, false
 		if shopType == "Pickaxes" then
-			for _, o in ipairs(pData.OwnedPickaxes or {}) do
-				if o == item.Name then owned = true end
-			end
+			for _, o in ipairs(pData.OwnedPickaxes or {}) do if o == item.Name then owned = true end end
 			equipped = pData.EquippedPickaxe == item.Name
 		elseif shopType == "Backpacks" then
-			for _, o in ipairs(pData.OwnedBackpacks or {}) do
-				if o == item.Name then owned = true end
-			end
+			for _, o in ipairs(pData.OwnedBackpacks or {}) do if o == item.Name then owned = true end end
 			equipped = pData.EquippedBackpack == item.Name
 		end
 
-		-- Buy / Owned button
 		local buyBtn = Instance.new("TextButton")
-		buyBtn.Size = UDim2.new(0, 100, 0, 35)
-		buyBtn.Position = UDim2.new(1, -110, 0.5, -17)
+		buyBtn.Size = UDim2.new(0, 90, 0, 30)
+		buyBtn.Position = UDim2.new(1, -98, 0.5, -15)
 		buyBtn.BorderSizePixel = 0
 		buyBtn.Font = Enum.Font.GothamBold
 		buyBtn.TextScaled = true
@@ -211,29 +171,19 @@ local function openShop(shopType, title)
 
 		if equipped then
 			buyBtn.Text = "✅ EQUIPPED"
-			buyBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
-			buyBtn.TextColor3 = Color3.new(1, 1, 1)
+			buyBtn.BackgroundColor3 = Color3.fromRGB(40,120,40)
+			buyBtn.TextColor3 = Color3.new(1,1,1)
 		elseif owned then
 			buyBtn.Text = "OWNED"
-			buyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-			buyBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+			buyBtn.BackgroundColor3 = Color3.fromRGB(60,60,80)
+			buyBtn.TextColor3 = Color3.fromRGB(150,150,150)
 		else
-			local price = item.Price or 0
-			buyBtn.Text = "$" .. formatNumber(price)
-			buyBtn.TextColor3 = Color3.new(1, 1, 1)
-			if (pData.Cash or 0) >= price then
-				buyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
-			else
-				buyBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
-			end
-
+			buyBtn.Text = "$"..formatNum(item.Price or 0)
+			buyBtn.TextColor3 = Color3.new(1,1,1)
+			buyBtn.BackgroundColor3 = (pData.Cash or 0) >= (item.Price or 0) and Color3.fromRGB(0,150,80) or Color3.fromRGB(100,40,40)
 			buyBtn.MouseButton1Click:Connect(function()
-				if shopType == "Pickaxes" then
-					BuyPickaxeEvent:FireServer(item.Name)
-				elseif shopType == "Backpacks" then
-					BuyBackpackEvent:FireServer(item.Name)
-				end
-				-- Refresh after short delay
+				if shopType == "Pickaxes" then BuyPickaxeEvent:FireServer(item.Name)
+				elseif shopType == "Backpacks" then BuyBackpackEvent:FireServer(item.Name) end
 				task.wait(0.5)
 				openShop(shopType, title)
 			end)
@@ -244,92 +194,93 @@ local function openShop(shopType, title)
 end
 
 ------------------------------------------------------------------------
--- DETECT SHOP ZONES (proximity-based, no buttons in mine)
+-- PROXIMITY PROMPT DETECTION (replaces "Press E" — works on ALL platforms)
 ------------------------------------------------------------------------
-local currentShopZone = nil
-local promptGui = Instance.new("ScreenGui")
-promptGui.Name = "ShopPrompt"
-promptGui.ResetOnSpawn = false
-promptGui.Parent = playerGui
-
-local promptLabel = Instance.new("TextLabel")
-promptLabel.Size = UDim2.new(0, 300, 0, 40)
-promptLabel.Position = UDim2.new(0.5, -150, 0.8, 0)
-promptLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-promptLabel.BackgroundTransparency = 0.3
-promptLabel.Text = ""
-promptLabel.TextColor3 = Color3.new(1, 1, 1)
-promptLabel.TextScaled = true
-promptLabel.Font = Enum.Font.GothamBold
-promptLabel.Visible = false
-promptLabel.BorderSizePixel = 0
-promptLabel.Parent = promptGui
-Instance.new("UICorner", promptLabel).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", promptLabel).Color = Color3.fromRGB(138, 43, 226)
-
--- Check proximity to shop triggers
-RunService.Heartbeat:Connect(function()
-	local char = player.Character
-	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-	local hrp = char.HumanoidRootPart
+task.spawn(function()
+	-- Wait for hub to build
+	task.wait(5)
 
 	local hubFolder = workspace:FindFirstChild("Hub")
 	if not hubFolder then return end
 
-	local nearestType = nil
-	local nearestDist = 20
-
+	-- Add ProximityPrompts to shop triggers
 	for _, obj in ipairs(hubFolder:GetDescendants()) do
-		if obj:GetAttribute("InteractionType") then
-			local dist = (hrp.Position - obj.Position).Magnitude
-			if dist < nearestDist then
-				nearestDist = dist
-				nearestType = obj:GetAttribute("InteractionType")
+		local iType = obj:GetAttribute("InteractionType")
+		if iType and obj:IsA("BasePart") then
+			-- Remove any existing ClickDetectors
+			local cd = obj:FindFirstChildOfClass("ClickDetector")
+			if cd then cd:Destroy() end
+
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.MaxActivationDistance = 12
+			prompt.RequiresLineOfSight = false
+			prompt.HoldDuration = 0
+
+			if iType == "PickaxeShop" then
+				prompt.ActionText = "Browse"
+				prompt.ObjectText = "⛏️ Pickaxe Shop"
+				prompt.Triggered:Connect(function(p)
+					if p == player then openShop("Pickaxes", "⛏️ PICKAXE SHOP") end
+				end)
+			elseif iType == "BackpackShop" then
+				prompt.ActionText = "Browse"
+				prompt.ObjectText = "🎒 Backpack Shop"
+				prompt.Triggered:Connect(function(p)
+					if p == player then openShop("Backpacks", "🎒 BACKPACK SHOP") end
+				end)
+			elseif iType == "PrestigeAltar" then
+				prompt.ActionText = "Prestige"
+				prompt.ObjectText = "⭐ Prestige Altar"
+				prompt.Triggered:Connect(function(p)
+					if p == player then PrestigeEvent:FireServer() end
+				end)
+			elseif iType == "SellPad" then
+				prompt.ActionText = "Sell All"
+				prompt.ObjectText = "💰 Sell Ores"
+				prompt.Triggered:Connect(function(p)
+					if p == player then SellOresEvent:FireServer() end
+				end)
+			elseif iType == "MineEntrance" then
+				prompt.ActionText = "Enter"
+				prompt.ObjectText = "⛏️ The Mines"
+				prompt.Triggered:Connect(function() end) -- Teleport handled by touch
+			elseif iType == "ReturnToHub" then
+				prompt.ActionText = "Return"
+				prompt.ObjectText = "🏠 Surface"
+				prompt.Triggered:Connect(function() end) -- Teleport handled by touch
+			elseif iType == "BuyGamepass" then
+				local gpName = obj:GetAttribute("GamepassName") or "Premium"
+				prompt.ActionText = "Purchase"
+				prompt.ObjectText = "💎 " .. gpName
+				prompt.Triggered:Connect(function(p)
+					if p == player then
+						-- Would open gamepass purchase prompt here
+						-- MarketplaceService:PromptGamePassPurchase(player, gamepassId)
+					end
+				end)
 			end
+
+			prompt.Parent = obj
 		end
 	end
 
-	if nearestType == "PickaxeShop" then
-		promptLabel.Text = "Press E — ⛏️ Pickaxe Shop"
-		promptLabel.Visible = true
-		currentShopZone = "Pickaxes"
-	elseif nearestType == "BackpackShop" then
-		promptLabel.Text = "Press E — 🎒 Backpack Shop"
-		promptLabel.Visible = true
-		currentShopZone = "Backpacks"
-	elseif nearestType == "PrestigeAltar" then
-		promptLabel.Text = "Press E — ⭐ Prestige"
-		promptLabel.Visible = true
-		currentShopZone = "Prestige"
-	elseif nearestType == "SellPad" then
-		promptLabel.Text = "Press E — 💰 Sell Ores"
-		promptLabel.Visible = true
-		currentShopZone = "Sell"
-	else
-		promptLabel.Visible = false
-		currentShopZone = nil
-	end
-end)
-
--- E key to interact
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
-	if input.KeyCode == Enum.KeyCode.E then
-		if currentShopZone == "Pickaxes" then
-			openShop("Pickaxes", "⛏️ PICKAXE SHOP")
-		elseif currentShopZone == "Backpacks" then
-			openShop("Backpacks", "🎒 BACKPACK SHOP")
-		elseif currentShopZone == "Prestige" then
-			PrestigeEvent:FireServer()
-		elseif currentShopZone == "Sell" then
-			SellOresEvent:FireServer()
+	-- Also add to mine return portal
+	local mineFolder = workspace:FindFirstChild("Mine")
+	if mineFolder then
+		local returnPortal = mineFolder:FindFirstChild("ReturnPortal")
+		if returnPortal then
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.MaxActivationDistance = 12
+			prompt.ActionText = "Return"
+			prompt.ObjectText = "🏠 Surface"
+			prompt.RequiresLineOfSight = false
+			prompt.Parent = returnPortal
 		end
 	end
 end)
 
 ------------------------------------------------------------------------
--- RETURN TO HUB BUTTON (shows only when in mines)
+-- RETURN TO HUB BUTTON (in mine only)
 ------------------------------------------------------------------------
 local hubBtnGui = Instance.new("ScreenGui")
 hubBtnGui.Name = "HubButton"
@@ -337,11 +288,12 @@ hubBtnGui.ResetOnSpawn = false
 hubBtnGui.Parent = playerGui
 
 local hubBtn = Instance.new("TextButton")
-hubBtn.Size = UDim2.new(0, 140, 0, 40)
+hubBtn.Size = UDim2.new(0, 120, 0, 35)
 hubBtn.Position = UDim2.new(0, 10, 0, 10)
 hubBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
-hubBtn.Text = "🏠 Return to Hub"
-hubBtn.TextColor3 = Color3.new(1, 1, 1)
+hubBtn.BackgroundTransparency = 0.2
+hubBtn.Text = "🏠 Surface"
+hubBtn.TextColor3 = Color3.new(1,1,1)
 hubBtn.TextScaled = true
 hubBtn.Font = Enum.Font.GothamBold
 hubBtn.BorderSizePixel = 0
@@ -349,44 +301,37 @@ hubBtn.Visible = false
 hubBtn.Parent = hubBtnGui
 Instance.new("UICorner", hubBtn).CornerRadius = UDim.new(0, 8)
 
+local TeleportToHubEvent = ReplicatedStorage:WaitForChild("TeleportToHub")
 hubBtn.MouseButton1Click:Connect(function()
 	TeleportToHubEvent:FireServer()
 end)
 
--- Show/hide based on Y position (below surface = in mine)
-RunService.Heartbeat:Connect(function()
-	local char = player.Character
-	if char and char:FindFirstChild("HumanoidRootPart") then
-		hubBtn.Visible = char.HumanoidRootPart.Position.Y < -5
-	end
-end)
-
-------------------------------------------------------------------------
--- VOID SELLER BUTTON (shows in mine if player has gamepass)
-------------------------------------------------------------------------
+-- Void Sell button (mine only)
 local voidSellBtn = Instance.new("TextButton")
-voidSellBtn.Size = UDim2.new(0, 140, 0, 40)
-voidSellBtn.Position = UDim2.new(0, 10, 0, 55)
+voidSellBtn.Size = UDim2.new(0, 120, 0, 35)
+voidSellBtn.Position = UDim2.new(0, 10, 0, 50)
 voidSellBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 100)
-voidSellBtn.Text = "🌀 Void Sell"
-voidSellBtn.TextColor3 = Color3.new(1, 1, 1)
+voidSellBtn.BackgroundTransparency = 0.2
+voidSellBtn.Text = "🌀 Sell"
+voidSellBtn.TextColor3 = Color3.new(1,1,1)
 voidSellBtn.TextScaled = true
 voidSellBtn.Font = Enum.Font.GothamBold
 voidSellBtn.BorderSizePixel = 0
 voidSellBtn.Visible = false
 voidSellBtn.Parent = hubBtnGui
 Instance.new("UICorner", voidSellBtn).CornerRadius = UDim.new(0, 8)
-
 voidSellBtn.MouseButton1Click:Connect(function()
 	SellOresEvent:FireServer()
 end)
 
--- Void Seller visibility check (simple: always show in mine, server validates gamepass)
+-- Show/hide based on position
 RunService.Heartbeat:Connect(function()
 	local char = player.Character
 	if char and char:FindFirstChild("HumanoidRootPart") then
-		voidSellBtn.Visible = char.HumanoidRootPart.Position.Y < -5
+		local inMine = char.HumanoidRootPart.Position.Y < -5
+		hubBtn.Visible = inMine
+		voidSellBtn.Visible = inMine
 	end
 end)
 
-print("[RiftMiners] Shop GUI loaded! Press E near shops ⛏️")
+print("[RiftMiners] Shop GUI loaded with ProximityPrompts! 🛒")

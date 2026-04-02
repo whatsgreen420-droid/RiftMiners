@@ -148,8 +148,8 @@ notifGui.Parent = player.PlayerGui
 
 local notifFrame = Instance.new("Frame")
 notifFrame.Name = "NotifContainer"
-notifFrame.Size = UDim2.new(0, 300, 1, 0)
-notifFrame.Position = UDim2.new(1, -310, 0, 10)
+notifFrame.Size = UDim2.new(0, 195, 1, 0)
+notifFrame.Position = UDim2.new(1, -202, 0, 8)
 notifFrame.BackgroundTransparency = 1
 notifFrame.Parent = notifGui
 
@@ -161,7 +161,7 @@ notifLayout.Parent = notifFrame
 
 NotifyEvent.OnClientEvent:Connect(function(data)
 	local card = Instance.new("Frame")
-	card.Size = UDim2.new(1, 0, 0, 60)
+	card.Size = UDim2.new(1, 0, 0, 42)
 	card.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 	card.BackgroundTransparency = 0.2
 	card.BorderSizePixel = 0

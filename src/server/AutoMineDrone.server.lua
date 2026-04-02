@@ -69,7 +69,7 @@ local function createDrone(player)
 	bb.Size = UDim2.new(0, 120, 0, 30)
 	bb.StudsOffset = Vector3.new(0, 2, 0)
 	bb.Adornee = body
-	bb.AlwaysOnTop = true
+	bb.AlwaysOnTop = false; bb.MaxDistance = 30
 	bb.Parent = body
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(1,0,1,0)

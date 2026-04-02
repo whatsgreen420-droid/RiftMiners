@@ -22,9 +22,10 @@ end
 
 local function addLabel(part, text, color, offset)
 	local bb = Instance.new("BillboardGui")
-	bb.Size = UDim2.new(0, 200, 0, 40)
+	bb.Size = UDim2.new(0, 130, 0, 26)  -- 35% smaller
 	bb.StudsOffset = offset or Vector3.new(0, 2, 0)
-	bb.Adornee = part; bb.AlwaysOnTop = true; bb.Parent = part
+	bb.Adornee = part; bb.AlwaysOnTop = false; bb.MaxDistance = 60  -- not always on top
+	bb.Parent = part
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(1,0,1,0); lbl.BackgroundTransparency = 1
 	lbl.Text = text; lbl.TextColor3 = color or Color3.new(1,1,1)
@@ -178,12 +179,5 @@ for i, seg in ipairs(fenceSegments) do
 			Material=Enum.Material.Wood, Parent=decoFolder})
 	end
 end
-
--- ===== VERSION DISPLAY (small, bottom corner) =====
--- Added via client script would be better, but a world sign works too
-local versionSign = makePart({Name="VersionSign", Size=Vector3.new(6, 2, 0.5),
-	Position=Vector3.new(75, 2, 68),
-	Color=Color3.fromRGB(40, 35, 30), Material=Enum.Material.Wood, Parent=decoFolder})
-addLabel(versionSign, "v1.0.0", Color3.fromRGB(150, 150, 150), Vector3.new(0, 1, 0))
 
 print("[RiftMiners] Hub decorations loaded: leaderboards, lanterns, crystals, fences 🏮")

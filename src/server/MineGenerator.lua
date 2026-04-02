@@ -178,9 +178,9 @@ function MineGenerator.GenerateLayer(layerIndex, parentFolder)
 		sign.Position = ORIGIN + Vector3.new(0, yPos + BLOCK*1.5, 0)
 
 		local bb = Instance.new("BillboardGui")
-		bb.Size = UDim2.new(0, 350, 0, 100)
+		bb.Size = UDim2.new(0, 228, 0, 65)
 		bb.StudsOffset = Vector3.new(0, 2, 0)
-		bb.Adornee = sign; bb.AlwaysOnTop = true; bb.Parent = sign
+		bb.Adornee = sign; bb.AlwaysOnTop = false; bb.MaxDistance = 60; bb.Parent = sign
 
 		-- Background card
 		local card = Instance.new("Frame")
@@ -289,9 +289,9 @@ function MineGenerator.Initialize()
 	end
 
 	local signBB = Instance.new("BillboardGui")
-	signBB.Size = UDim2.new(0, 250, 0, 60)
+	signBB.Size = UDim2.new(0, 163, 0, 39)
 	signBB.StudsOffset = Vector3.new(0, 5, 0)
-	signBB.Adornee = signBoard; signBB.AlwaysOnTop = true
+	signBB.Adornee = signBoard; signBB.AlwaysOnTop = false; signBB.MaxDistance = 60
 	signBB.Parent = signBoard
 	local signLbl = Instance.new("TextLabel")
 	signLbl.Size = UDim2.new(1,0,1,0)
@@ -330,9 +330,9 @@ function MineGenerator.Initialize()
 
 	-- Portal sign
 	local rpBB = Instance.new("BillboardGui")
-	rpBB.Size = UDim2.new(0, 200, 0, 50)
+	rpBB.Size = UDim2.new(0, 130, 0, 32)
 	rpBB.StudsOffset = Vector3.new(0, 7, 0)
-	rpBB.Adornee = returnPortal; rpBB.AlwaysOnTop = true; rpBB.Parent = returnPortal
+	rpBB.Adornee = returnPortal; rpBB.AlwaysOnTop = false; rpBB.MaxDistance = 50; rpBB.Parent = returnPortal
 	local rpLbl = Instance.new("TextLabel")
 	rpLbl.Size = UDim2.new(1,0,1,0); rpLbl.BackgroundTransparency = 1
 	rpLbl.Text = "🏠 RETURN TO SURFACE"

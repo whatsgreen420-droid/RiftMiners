@@ -185,7 +185,7 @@ local function createNPC(name, position)
 	indicatorGui.Size = UDim2.new(0, 60, 0, 60)
 	indicatorGui.StudsOffset = Vector3.new(0, 5, 0)
 	indicatorGui.Adornee = head
-	indicatorGui.AlwaysOnTop = true
+	indicatorGui.AlwaysOnTop = false; indicatorGui.MaxDistance = 30
 	indicatorGui.Parent = head
 	
 	local indicator = Instance.new("TextLabel")

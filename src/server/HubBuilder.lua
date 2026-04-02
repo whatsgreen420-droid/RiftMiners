@@ -25,10 +25,11 @@ end
 
 local function addLabel(part, text, color, offset)
 	local bb = Instance.new("BillboardGui")
-	bb.Size = UDim2.new(0, 220, 0, 50)
+	bb.Size = UDim2.new(0, 143, 0, 32)  -- 35% smaller than 220x50
 	bb.StudsOffset = offset or Vector3.new(0, 3, 0)
 	bb.Adornee = part
-	bb.AlwaysOnTop = true
+	bb.AlwaysOnTop = false  -- prevent text overlap
+	bb.MaxDistance = 80
 	bb.Parent = part
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(1,0,1,0)
@@ -207,17 +208,19 @@ function HubBuilder.Build()
 	-- ===== PREMIUM SHOP — Individual pedestals facing LEFT (-X direction) =====
 	local premBase = cfg.PremiumShopPosition  -- 108.054, 33.348, 2.703
 	local gamepasses = GameConfig.Gamepasses
-	local spacing = 10  -- space between each pedestal along Z axis
+	local spacing = 8  -- tighter spacing to fit inside building
+	local totalZ = (#gamepasses - 1) * spacing
+	local startZ = premBase.Z - totalZ / 2  -- center the group
 
 	-- Title sign
 	local premSign = makePart({Name="PremiumSign", Size=Vector3.new(1,1,1),
-		Position=premBase + Vector3.new(0, 8, (#gamepasses-1)*spacing/2),
+		Position=premBase + Vector3.new(-8, 8, 0),  -- moved forward (left)
 		Transparency=1, CanCollide=false, Parent=hub})
 	addLabel(premSign, "💎 PREMIUM SHOP 💎", Color3.fromRGB(255,215,0), Vector3.new(0,2,0))
 
 	for i, gp in ipairs(gamepasses) do
-		-- Line them up along Z axis, all facing left (-X)
-		local pedPos = Vector3.new(premBase.X, premBase.Y, premBase.Z + (i-1) * spacing)
+		-- Line up along Z axis, centered, moved forward (-X) into the building
+		local pedPos = Vector3.new(premBase.X - 5, premBase.Y, startZ + (i-1) * spacing)
 
 		-- Pedestal (rotated to face -X)
 		local pedestal = makePart({Name="Pedestal_"..gp.Name, Size=Vector3.new(5,3,5), Position=pedPos,
@@ -253,9 +256,9 @@ function HubBuilder.Build()
 		local descA = makePart({Name="Desc_"..gp.Name, Size=Vector3.new(1,1,1),
 			Position=pedPos+Vector3.new(0,4,0), Transparency=1, CanCollide=false, Parent=hub})
 		local dbb = Instance.new("BillboardGui")
-		dbb.Size = UDim2.new(0,200,0,40)
+		dbb.Size = UDim2.new(0,130,0,26)
 		dbb.StudsOffset = Vector3.new(0,1,0)
-		dbb.Adornee = descA; dbb.AlwaysOnTop = true; dbb.Parent = descA
+		dbb.Adornee = descA; dbb.AlwaysOnTop = false; dbb.MaxDistance = 40; dbb.Parent = descA
 		local dl = Instance.new("TextLabel")
 		dl.Size = UDim2.new(1,0,1,0); dl.BackgroundTransparency = 1
 		dl.Text = gp.Description; dl.TextColor3 = Color3.fromRGB(200,200,200)

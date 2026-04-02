@@ -25,14 +25,14 @@ hudGui.Parent = playerGui
 -- ===== DEPTH DISPLAY (top center) =====
 local depthFrame = Instance.new("Frame")
 depthFrame.Name = "DepthDisplay"
-depthFrame.Size = UDim2.new(0, 250, 0, 70)
-depthFrame.Position = UDim2.new(0.5, -125, 0, 5)
+depthFrame.Size = UDim2.new(0, 165, 0, 46)
+depthFrame.Position = UDim2.new(0.5, -82, 0, 5)
 depthFrame.BackgroundTransparency = 1
 depthFrame.Parent = hudGui
 
 local depthLabel = Instance.new("TextLabel")
 depthLabel.Name = "DepthLabel"
-depthLabel.Size = UDim2.new(1, 0, 0, 25)
+depthLabel.Size = UDim2.new(1, 0, 0, 16)
 depthLabel.BackgroundTransparency = 1
 depthLabel.Text = "Depth"
 depthLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -43,8 +43,8 @@ depthLabel.Parent = depthFrame
 
 local depthValue = Instance.new("TextLabel")
 depthValue.Name = "DepthValue"
-depthValue.Size = UDim2.new(1, 0, 0, 35)
-depthValue.Position = UDim2.new(0, 0, 0, 25)
+depthValue.Size = UDim2.new(1, 0, 0, 24)
+depthValue.Position = UDim2.new(0, 0, 0, 16)
 depthValue.BackgroundTransparency = 1
 depthValue.Text = "0 Blocks"
 depthValue.TextColor3 = Color3.new(1, 1, 1)
@@ -53,26 +53,26 @@ depthValue.Font = Enum.Font.GothamBlack
 depthValue.TextStrokeTransparency = 0
 depthValue.Parent = depthFrame
 
--- ===== LEFT SIDE: Currency + Backpack =====
+-- ===== LEFT SIDE: Currency + Backpack (35% smaller) =====
 local leftPanel = Instance.new("Frame")
 leftPanel.Name = "LeftPanel"
-leftPanel.Size = UDim2.new(0, 220, 0, 180)
-leftPanel.Position = UDim2.new(0, 10, 0.3, 0)
+leftPanel.Size = UDim2.new(0, 145, 0, 135)
+leftPanel.Position = UDim2.new(0, 8, 0.3, 0)
 leftPanel.BackgroundTransparency = 1
 leftPanel.Parent = hudGui
 
--- Coins display
+-- Coins
 local coinFrame = Instance.new("Frame")
-coinFrame.Size = UDim2.new(1, 0, 0, 40)
+coinFrame.Size = UDim2.new(1, 0, 0, 28)
 coinFrame.BackgroundColor3 = Color3.fromRGB(0, 150, 220)
-coinFrame.BackgroundTransparency = 0.2
+coinFrame.BackgroundTransparency = 0.3
 coinFrame.BorderSizePixel = 0
 coinFrame.Parent = leftPanel
-Instance.new("UICorner", coinFrame).CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner", coinFrame).CornerRadius = UDim.new(0, 14)
 
 local coinIcon = Instance.new("TextLabel")
-coinIcon.Size = UDim2.new(0, 35, 0, 35)
-coinIcon.Position = UDim2.new(0, 5, 0, 2)
+coinIcon.Size = UDim2.new(0, 22, 0, 22)
+coinIcon.Position = UDim2.new(0, 4, 0, 3)
 coinIcon.BackgroundTransparency = 1
 coinIcon.Text = "💰"
 coinIcon.TextScaled = true
@@ -80,8 +80,8 @@ coinIcon.Parent = coinFrame
 
 local coinLabel = Instance.new("TextLabel")
 coinLabel.Name = "CoinLabel"
-coinLabel.Size = UDim2.new(1, -50, 1, 0)
-coinLabel.Position = UDim2.new(0, 40, 0, 0)
+coinLabel.Size = UDim2.new(1, -30, 1, 0)
+coinLabel.Position = UDim2.new(0, 28, 0, 0)
 coinLabel.BackgroundTransparency = 1
 coinLabel.Text = "0"
 coinLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -90,19 +90,19 @@ coinLabel.Font = Enum.Font.GothamBold
 coinLabel.TextXAlignment = Enum.TextXAlignment.Left
 coinLabel.Parent = coinFrame
 
--- Backpack capacity bar
+-- Backpack
 local bpFrame = Instance.new("Frame")
-bpFrame.Size = UDim2.new(1, 0, 0, 40)
-bpFrame.Position = UDim2.new(0, 0, 0, 45)
+bpFrame.Size = UDim2.new(1, 0, 0, 28)
+bpFrame.Position = UDim2.new(0, 0, 0, 32)
 bpFrame.BackgroundColor3 = Color3.fromRGB(0, 150, 220)
-bpFrame.BackgroundTransparency = 0.2
+bpFrame.BackgroundTransparency = 0.3
 bpFrame.BorderSizePixel = 0
 bpFrame.Parent = leftPanel
-Instance.new("UICorner", bpFrame).CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner", bpFrame).CornerRadius = UDim.new(0, 14)
 
 local bpIcon = Instance.new("TextLabel")
-bpIcon.Size = UDim2.new(0, 35, 0, 35)
-bpIcon.Position = UDim2.new(0, 5, 0, 2)
+bpIcon.Size = UDim2.new(0, 22, 0, 22)
+bpIcon.Position = UDim2.new(0, 4, 0, 3)
 bpIcon.BackgroundTransparency = 1
 bpIcon.Text = "🎒"
 bpIcon.TextScaled = true
@@ -110,8 +110,8 @@ bpIcon.Parent = bpFrame
 
 local bpLabel = Instance.new("TextLabel")
 bpLabel.Name = "BpLabel"
-bpLabel.Size = UDim2.new(1, -50, 1, 0)
-bpLabel.Position = UDim2.new(0, 40, 0, 0)
+bpLabel.Size = UDim2.new(1, -30, 1, 0)
+bpLabel.Position = UDim2.new(0, 28, 0, 0)
 bpLabel.BackgroundTransparency = 1
 bpLabel.Text = "0 / 15"
 bpLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -120,19 +120,19 @@ bpLabel.Font = Enum.Font.GothamBold
 bpLabel.TextXAlignment = Enum.TextXAlignment.Left
 bpLabel.Parent = bpFrame
 
--- Prestige level display
+-- Prestige
 local prestFrame = Instance.new("Frame")
-prestFrame.Size = UDim2.new(1, 0, 0, 40)
-prestFrame.Position = UDim2.new(0, 0, 0, 90)
+prestFrame.Size = UDim2.new(1, 0, 0, 28)
+prestFrame.Position = UDim2.new(0, 0, 0, 64)
 prestFrame.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-prestFrame.BackgroundTransparency = 0.2
+prestFrame.BackgroundTransparency = 0.3
 prestFrame.BorderSizePixel = 0
 prestFrame.Parent = leftPanel
-Instance.new("UICorner", prestFrame).CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner", prestFrame).CornerRadius = UDim.new(0, 14)
 
 local prestIcon = Instance.new("TextLabel")
-prestIcon.Size = UDim2.new(0, 35, 0, 35)
-prestIcon.Position = UDim2.new(0, 5, 0, 2)
+prestIcon.Size = UDim2.new(0, 22, 0, 22)
+prestIcon.Position = UDim2.new(0, 4, 0, 3)
 prestIcon.BackgroundTransparency = 1
 prestIcon.Text = "⭐"
 prestIcon.TextScaled = true
@@ -140,8 +140,8 @@ prestIcon.Parent = prestFrame
 
 local prestLabel = Instance.new("TextLabel")
 prestLabel.Name = "PrestigeLabel"
-prestLabel.Size = UDim2.new(1, -50, 1, 0)
-prestLabel.Position = UDim2.new(0, 40, 0, 0)
+prestLabel.Size = UDim2.new(1, -30, 1, 0)
+prestLabel.Position = UDim2.new(0, 28, 0, 0)
 prestLabel.BackgroundTransparency = 1
 prestLabel.Text = "0"
 prestLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -150,31 +150,33 @@ prestLabel.Font = Enum.Font.GothamBold
 prestLabel.TextXAlignment = Enum.TextXAlignment.Left
 prestLabel.Parent = prestFrame
 
--- Left side action buttons (Sell, Prestige)
+-- Quick buttons (smaller)
 local sellBtn = Instance.new("TextButton")
-sellBtn.Size = UDim2.new(0, 70, 0, 50)
-sellBtn.Position = UDim2.new(0, 0, 0, 135)
+sellBtn.Size = UDim2.new(0, 55, 0, 32)
+sellBtn.Position = UDim2.new(0, 0, 0, 96)
 sellBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+sellBtn.BackgroundTransparency = 0.2
 sellBtn.Text = "Sell"
 sellBtn.TextColor3 = Color3.new(1,1,1)
 sellBtn.TextScaled = true
 sellBtn.Font = Enum.Font.GothamBold
 sellBtn.BorderSizePixel = 0
 sellBtn.Parent = leftPanel
-Instance.new("UICorner", sellBtn).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", sellBtn).CornerRadius = UDim.new(0, 10)
 sellBtn.MouseButton1Click:Connect(function() SellOresEvent:FireServer() end)
 
 local rebBtn = Instance.new("TextButton")
-rebBtn.Size = UDim2.new(0, 70, 0, 50)
-rebBtn.Position = UDim2.new(0, 75, 0, 135)
+rebBtn.Size = UDim2.new(0, 80, 0, 32)
+rebBtn.Position = UDim2.new(0, 60, 0, 96)
 rebBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
-rebBtn.Text = "⭐\nPrestige"
+rebBtn.BackgroundTransparency = 0.2
+rebBtn.Text = "⭐ Prestige"
 rebBtn.TextColor3 = Color3.new(1,1,1)
 rebBtn.TextScaled = true
 rebBtn.Font = Enum.Font.GothamBold
 rebBtn.BorderSizePixel = 0
 rebBtn.Parent = leftPanel
-Instance.new("UICorner", rebBtn).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", rebBtn).CornerRadius = UDim.new(0, 10)
 rebBtn.MouseButton1Click:Connect(function() PrestigeEvent:FireServer() end)
 
 ------------------------------------------------------------------------

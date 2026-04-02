@@ -241,6 +241,13 @@ GameConfig.Gamepasses = {
 		SellBonus = 0.10,
 		Icon = "💰",
 	},
+	{
+		Name = "Void Seller",
+		Id = 0,
+		Description = "Sell ores anywhere! No need to return to the surface!",
+		Effect = "VoidSeller",
+		Icon = "🌀",
+	},
 }
 
 ------------------------------------------------------------------------
@@ -257,13 +264,18 @@ GameConfig.Leaderboards = {
 GameConfig.World = {
 	Hub = {
 		SpawnPosition = Vector3.new(0, 10, 0),
-		ShopPosition = Vector3.new(50, 5, 0),
-		BackpackShopPosition = Vector3.new(50, 5, 40),
+		-- Pickaxe + Backpack shops: right side, between white platform and building
+		ShopPosition = Vector3.new(65, 5, 20),
+		BackpackShopPosition = Vector3.new(65, 5, 40),
+		-- Sell pad: left of spawn
 		SellPadPosition = Vector3.new(-50, 5, 0),
-		PrestigeAltarPosition = Vector3.new(0, 5, 60),
-		LeaderboardPosition = Vector3.new(-50, 5, 50),
+		-- Prestige + Leaderboard: on/near the white platform (back-right)
+		PrestigeAltarPosition = Vector3.new(80, 8, 55),
+		LeaderboardPosition = Vector3.new(95, 8, 55),
+		-- Mine entrance: behind spawn
 		MineEntrancePosition = Vector3.new(0, 5, -60),
-		GamepassShopPosition = Vector3.new(50, 5, -40),
+		-- Premium shop: inside the white awning building (left side)
+		GamepassShopPosition = Vector3.new(-60, 5, 40),
 	},
 	Mine = {
 		BlockSize = 6,

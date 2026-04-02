@@ -1,5 +1,5 @@
 -- GameServer.server.lua
--- Main server script: init world, handle remotes, mining, selling, shops, prestige
+-- Main server: world init, remotes, mining, selling, shops, prestige, teleporters
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,14 +13,10 @@ local HubBuilder = require(ServerFolder:WaitForChild("HubBuilder"))
 local MineGenerator = require(ServerFolder:WaitForChild("MineGenerator"))
 local PlayerDataManager = require(ServerFolder:WaitForChild("PlayerDataManager"))
 
-------------------------------------------------------------------------
--- REMOTE EVENTS
-------------------------------------------------------------------------
+-- Remote Events
 local function makeRemote(name, class)
 	local r = Instance.new(class or "RemoteEvent")
-	r.Name = name
-	r.Parent = ReplicatedStorage
-	return r
+	r.Name = name; r.Parent = ReplicatedStorage; return r
 end
 
 local MineBlockEvent     = makeRemote("MineBlock")
@@ -28,19 +24,20 @@ local SellOresEvent      = makeRemote("SellOres")
 local BuyPickaxeEvent    = makeRemote("BuyPickaxe")
 local BuyBackpackEvent   = makeRemote("BuyBackpack")
 local PrestigeEvent      = makeRemote("Prestige")
+local TeleportToMineEvent = makeRemote("TeleportToMine")
+local TeleportToHubEvent  = makeRemote("TeleportToHub")
 local NotifyEvent        = makeRemote("Notify")
+local OpenShopEvent      = makeRemote("OpenShop")
 local GetPlayerDataFunc  = makeRemote("GetPlayerData", "RemoteFunction")
 local GetShopDataFunc    = makeRemote("GetShopData", "RemoteFunction")
 
-------------------------------------------------------------------------
--- BUILD WORLD
-------------------------------------------------------------------------
-print("[RiftMiners] ========================================")
-print("[RiftMiners]   ⛏️ RIFT MINERS — Server Starting...")
-print("[RiftMiners] ========================================")
+print("[RiftMiners] ⛏️ RIFT MINERS — Server Starting...")
 
 HubBuilder.Build()
 local mineFolder = MineGenerator.Initialize()
+
+local MINE_ORIGIN = GameConfig.World.Mine.OriginPosition
+local BLOCK_SIZE = GameConfig.World.Mine.BlockSize
 
 print("[RiftMiners] World generation complete!")
 
@@ -82,6 +79,50 @@ task.spawn(function()
 end)
 
 ------------------------------------------------------------------------
+-- TELEPORTERS
+------------------------------------------------------------------------
+-- Mine portal touch → teleport to mine
+task.spawn(function()
+	task.wait(3)
+	local portal = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("MinePortal")
+	if portal then
+		local debounce = {}
+		portal.Touched:Connect(function(hit)
+			local p = Players:GetPlayerFromCharacter(hit.Parent)
+			if p and not debounce[p] then
+				debounce[p] = true
+				local char = p.Character
+				if char and char:FindFirstChild("HumanoidRootPart") then
+					char.HumanoidRootPart.CFrame = CFrame.new(MINE_ORIGIN + Vector3.new(0, BLOCK_SIZE * 2, 0))
+					NotifyEvent:FireClient(p, {
+						Title = "⛏️ Entering the Mines",
+						Message = "Mine ores and sell them at the surface!",
+						Duration = 3,
+						Color = Color3.fromRGB(138, 43, 226),
+					})
+				end
+				task.wait(2)
+				debounce[p] = nil
+			end
+		end)
+	end
+end)
+
+TeleportToMineEvent.OnServerEvent:Connect(function(player)
+	local char = player.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		char.HumanoidRootPart.CFrame = CFrame.new(MINE_ORIGIN + Vector3.new(0, BLOCK_SIZE * 2, 0))
+	end
+end)
+
+TeleportToHubEvent.OnServerEvent:Connect(function(player)
+	local char = player.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		char.HumanoidRootPart.CFrame = CFrame.new(GameConfig.World.Hub.SpawnPosition)
+	end
+end)
+
+------------------------------------------------------------------------
 -- MINING
 ------------------------------------------------------------------------
 MineBlockEvent.OnServerEvent:Connect(function(player, block)
@@ -105,9 +146,8 @@ MineBlockEvent.OnServerEvent:Connect(function(player, block)
 				Title = "+" .. oreType,
 				Message = "Value: $" .. oreValue,
 				Duration = 1.5,
-				Color = GameConfig.RarityColors[oreRarity] or Color3.new(1, 1, 1),
+				Color = GameConfig.RarityColors[oreRarity] or Color3.new(1,1,1),
 			})
-
 			-- Track depth
 			local depth = block:GetAttribute("Depth") or 0
 			local data = PlayerDataManager.Data[player]
@@ -121,7 +161,7 @@ MineBlockEvent.OnServerEvent:Connect(function(player, block)
 		else
 			NotifyEvent:FireClient(player, {
 				Title = "🎒 Backpack Full!",
-				Message = "Sell your ores at the Sell Pad!",
+				Message = "Return to surface to sell!",
 				Duration = 2,
 				Color = Color3.fromRGB(255, 80, 80),
 			})
@@ -134,17 +174,41 @@ MineBlockEvent.OnServerEvent:Connect(function(player, block)
 		for _, child in ipairs(mineFolder:GetChildren()) do
 			if child:IsA("Folder") then existingLayers = existingLayers + 1 end
 		end
-		local layerIndex = math.floor(math.abs(block.Position.Y - MINE_ORIGIN.Y) / BLOCK_SIZE)
-		if layerIndex >= existingLayers - 2 then
-			MineGenerator.GenerateLayer(existingLayers, mineFolder)
+		if existingLayers < GameConfig.World.Mine.MaxDepth then
+			local blockDepth = math.floor(math.abs(block.Position.Y - MINE_ORIGIN.Y) / BLOCK_SIZE)
+			if blockDepth >= existingLayers - 2 then
+				MineGenerator.GenerateLayer(existingLayers, mineFolder)
+			end
 		end
 	end
 end)
 
 ------------------------------------------------------------------------
--- SELL ORES (touch-based + remote)
+-- SELLING
 ------------------------------------------------------------------------
 SellOresEvent.OnServerEvent:Connect(function(player)
+	-- Check if player has Void Seller gamepass (can sell anywhere)
+	-- Otherwise they must be near the sell pad
+	local hasVoidSeller = PlayerDataManager.HasGamepass(player, "Void Seller")
+
+	if not hasVoidSeller then
+		-- Check if near sell pad
+		local char = player.Character
+		local sellPad = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("SellPad")
+		if char and sellPad and char:FindFirstChild("HumanoidRootPart") then
+			local dist = (char.HumanoidRootPart.Position - sellPad.Position).Magnitude
+			if dist > 30 then
+				NotifyEvent:FireClient(player, {
+					Title = "Too Far!",
+					Message = "Return to the Sell Pad on the surface!",
+					Duration = 2,
+					Color = Color3.fromRGB(255, 80, 80),
+				})
+				return
+			end
+		end
+	end
+
 	local totalValue = PlayerDataManager.SellAllOres(player)
 	if totalValue > 0 then
 		NotifyEvent:FireClient(player, {
@@ -196,9 +260,8 @@ BuyPickaxeEvent.OnServerEvent:Connect(function(player, name)
 	local ok, msg = PlayerDataManager.BuyPickaxe(player, name)
 	NotifyEvent:FireClient(player, {
 		Title = ok and "⛏️ Purchased!" or "Cannot Buy",
-		Message = msg,
-		Duration = 2,
-		Color = ok and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 80, 80),
+		Message = msg, Duration = 2,
+		Color = ok and Color3.fromRGB(0,255,100) or Color3.fromRGB(255,80,80),
 	})
 end)
 
@@ -206,9 +269,8 @@ BuyBackpackEvent.OnServerEvent:Connect(function(player, name)
 	local ok, msg = PlayerDataManager.BuyBackpack(player, name)
 	NotifyEvent:FireClient(player, {
 		Title = ok and "🎒 Purchased!" or "Cannot Buy",
-		Message = msg,
-		Duration = 2,
-		Color = ok and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 80, 80),
+		Message = msg, Duration = 2,
+		Color = ok and Color3.fromRGB(0,255,100) or Color3.fromRGB(255,80,80),
 	})
 end)
 
@@ -219,9 +281,8 @@ PrestigeEvent.OnServerEvent:Connect(function(player)
 	local ok, msg = PlayerDataManager.Prestige(player)
 	NotifyEvent:FireClient(player, {
 		Title = ok and "⭐ PRESTIGE! ⭐" or "Cannot Prestige",
-		Message = msg,
-		Duration = ok and 5 or 2,
-		Color = ok and Color3.fromRGB(255, 200, 50) or Color3.fromRGB(255, 80, 80),
+		Message = msg, Duration = ok and 5 or 2,
+		Color = ok and Color3.fromRGB(255,200,50) or Color3.fromRGB(255,80,80),
 	})
 end)
 

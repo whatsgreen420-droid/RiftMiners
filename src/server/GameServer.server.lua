@@ -319,7 +319,12 @@ end)
 -- DATA REQUESTS
 ------------------------------------------------------------------------
 GetPlayerDataFunc.OnServerInvoke = function(player)
-	return PlayerDataManager.Data[player]
+	local data = PlayerDataManager.Data[player]
+	if data then
+		-- Add backpack capacity for HUD display
+		data.BackpackCapacity = PlayerDataManager.GetBackpackCapacity(player)
+	end
+	return data
 end
 
 GetShopDataFunc.OnServerInvoke = function(player, shopType)

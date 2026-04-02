@@ -266,8 +266,8 @@ GameConfig.World = {
 		SpawnPosition = Vector3.new(0, 10, 0),
 		-- Prestige altar: on the white platform
 		PrestigeAltarPosition = Vector3.new(-0.129, 6.202, 142.16),
-		-- Premium items: all at this base position, facing left (-X direction)
-		PremiumShopPosition = Vector3.new(108.054, 33.348, 2.703),
+		-- Premium items: centered on top of item, facing left (-X direction)
+		PremiumShopPosition = Vector3.new(108.313, 17.243, 0.448),
 		-- Pickaxe shop: left side of mine portal
 		ShopPosition = Vector3.new(-20, 5, -60),
 		-- Backpack shop: right side of mine portal

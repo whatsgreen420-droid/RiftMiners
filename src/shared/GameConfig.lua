@@ -264,26 +264,31 @@ GameConfig.Leaderboards = {
 GameConfig.World = {
 	Hub = {
 		SpawnPosition = Vector3.new(0, 10, 0),
-		-- Pickaxe + Backpack shops: right side, between white platform and building
-		ShopPosition = Vector3.new(65, 5, 20),
-		BackpackShopPosition = Vector3.new(65, 5, 40),
-		-- Sell pad: left of spawn
+		-- Prestige altar: on the white platform
+		PrestigeAltarPosition = Vector3.new(-0.129, 6.202, 142.16),
+		-- Premium items: all at this base position, facing left (-X direction)
+		PremiumShopPosition = Vector3.new(108.054, 33.348, 2.703),
+		-- Pickaxe shop: left side of mine portal
+		ShopPosition = Vector3.new(-20, 5, -60),
+		-- Backpack shop: right side of mine portal
+		BackpackShopPosition = Vector3.new(20, 5, -60),
+		-- Sell pad: left of spawn area
 		SellPadPosition = Vector3.new(-50, 5, 0),
-		-- Prestige + Leaderboard: on/near the white platform (back-right)
-		PrestigeAltarPosition = Vector3.new(80, 8, 55),
-		LeaderboardPosition = Vector3.new(95, 8, 55),
 		-- Mine entrance: behind spawn
 		MineEntrancePosition = Vector3.new(0, 5, -60),
-		-- Premium shop: inside the white awning building (left side)
-		GamepassShopPosition = Vector3.new(-60, 5, 40),
 	},
 	Mine = {
+		-- Mine area: large open pit style, descending layers
+		-- Entrance at top, players mine downward through visible layers
 		BlockSize = 6,
-		ChunkWidth = 12,
-		ChunkDepth = 12,
+		ChunkWidth = 16,         -- wider mine like real mining sims
+		ChunkDepth = 16,
 		MaxDepth = 999,
-		RenderDistance = 5,
-		OriginPosition = Vector3.new(0, -10, -150),
+		RenderDistance = 8,       -- more layers visible
+		-- Mine entrance position: where players teleport to (top of the pit)
+		EntrancePosition = Vector3.new(0, -10, -200),
+		-- Origin: where blocks start generating
+		OriginPosition = Vector3.new(0, -15, -200),
 	},
 }
 

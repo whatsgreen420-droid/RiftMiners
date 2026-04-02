@@ -36,8 +36,10 @@ print("[RiftMiners] ⛏️ RIFT MINERS — Server Starting...")
 HubBuilder.Build()
 local mineFolder = MineGenerator.Initialize()
 
+local MINE_ENTRANCE = GameConfig.World.Mine.EntrancePosition
 local MINE_ORIGIN = GameConfig.World.Mine.OriginPosition
 local BLOCK_SIZE = GameConfig.World.Mine.BlockSize
+local CHUNK_D = GameConfig.World.Mine.ChunkDepth
 
 print("[RiftMiners] World generation complete!")
 
@@ -93,11 +95,13 @@ task.spawn(function()
 				debounce[p] = true
 				local char = p.Character
 				if char and char:FindFirstChild("HumanoidRootPart") then
-					char.HumanoidRootPart.CFrame = CFrame.new(MINE_ORIGIN + Vector3.new(0, BLOCK_SIZE * 2, 0))
+					-- Teleport to mine entrance platform
+					local mineDepthZ = CHUNK_D * BLOCK_SIZE
+					char.HumanoidRootPart.CFrame = CFrame.new(MINE_ENTRANCE + Vector3.new(0, 5, mineDepthZ/2 + 15))
 					NotifyEvent:FireClient(p, {
-						Title = "⛏️ Entering the Mines",
-						Message = "Mine ores and sell them at the surface!",
-						Duration = 3,
+						Title = "⛏️ Welcome to the Mines!",
+						Message = "Mine ores and sell at the surface! Use the green portal to return.",
+						Duration = 4,
 						Color = Color3.fromRGB(138, 43, 226),
 					})
 				end
@@ -106,12 +110,37 @@ task.spawn(function()
 			end
 		end)
 	end
+
+	-- Return portal in mine → teleport back to hub
+	local returnPortal = workspace:FindFirstChild("Mine") and workspace.Mine:FindFirstChild("ReturnPortal")
+	if returnPortal then
+		local debounce2 = {}
+		returnPortal.Touched:Connect(function(hit)
+			local p = Players:GetPlayerFromCharacter(hit.Parent)
+			if p and not debounce2[p] then
+				debounce2[p] = true
+				local char = p.Character
+				if char and char:FindFirstChild("HumanoidRootPart") then
+					char.HumanoidRootPart.CFrame = CFrame.new(GameConfig.World.Hub.SpawnPosition + Vector3.new(0, 5, 0))
+					NotifyEvent:FireClient(p, {
+						Title = "🏠 Back on the Surface!",
+						Message = "Sell your ores and upgrade your gear!",
+						Duration = 3,
+						Color = Color3.fromRGB(0, 200, 100),
+					})
+				end
+				task.wait(2)
+				debounce2[p] = nil
+			end
+		end)
+	end
 end)
 
 TeleportToMineEvent.OnServerEvent:Connect(function(player)
 	local char = player.Character
 	if char and char:FindFirstChild("HumanoidRootPart") then
-		char.HumanoidRootPart.CFrame = CFrame.new(MINE_ORIGIN + Vector3.new(0, BLOCK_SIZE * 2, 0))
+		local mineDepthZ = CHUNK_D * BLOCK_SIZE
+		char.HumanoidRootPart.CFrame = CFrame.new(MINE_ENTRANCE + Vector3.new(0, 5, mineDepthZ/2 + 15))
 	end
 end)
 

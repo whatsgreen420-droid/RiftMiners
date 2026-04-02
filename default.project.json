@@ -25,13 +25,6 @@
       "Shared": {
         "$path": "src/shared"
       }
-    },
-
-    "StarterGui": {
-      "$className": "StarterGui",
-      "GUI": {
-        "$path": "src/gui"
-      }
     }
   }
 }

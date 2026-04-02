@@ -395,12 +395,66 @@ end)
 ---------- SPAWN NPC ----------
 
 -- Place Miner Mike near the hub
-local mikePosition = Vector3.new(90, 14.5, -20) -- Near mine entrance area
+local mikePosition = Vector3.new(-40, 8, 10) -- Next to sell area, above ground
 local mikeModel, mikeClick = createNPC("Miner Mike", mikePosition)
+
+-- Persistent speech bubble above Mike
+local speechBubble = Instance.new("BillboardGui")
+speechBubble.Name = "SpeechBubble"
+speechBubble.Size = UDim2.new(0, 200, 0, 55)
+speechBubble.StudsOffset = Vector3.new(0, 7, 0)
+speechBubble.MaxDistance = 60
+speechBubble.AlwaysOnTop = false
+local mikeHead = mikeModel:FindFirstChild("Head")
+if mikeHead then
+	speechBubble.Adornee = mikeHead
+	speechBubble.Parent = mikeHead
+end
+
+local bubbleBG = Instance.new("Frame")
+bubbleBG.Size = UDim2.new(1, 0, 1, 0)
+bubbleBG.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+bubbleBG.BackgroundTransparency = 0.1
+bubbleBG.BorderSizePixel = 0
+bubbleBG.Parent = speechBubble
+Instance.new("UICorner", bubbleBG).CornerRadius = UDim.new(0, 10)
+
+local bubbleText = Instance.new("TextLabel")
+bubbleText.Size = UDim2.new(1, -10, 1, -6)
+bubbleText.Position = UDim2.new(0, 5, 0, 3)
+bubbleText.BackgroundTransparency = 1
+bubbleText.Text = "Come over here to sell your gems and to get quests from Miner Mike!"
+bubbleText.TextColor3 = Color3.fromRGB(50, 40, 30)
+bubbleText.TextScaled = true
+bubbleText.TextWrapped = true
+bubbleText.Font = Enum.Font.GothamBold
+bubbleText.Parent = bubbleBG
+
+-- Add ProximityPrompt for mobile/console interaction
+local mikeRoot = mikeModel:FindFirstChild("HumanoidRootPart")
+if mikeRoot then
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Talk"
+	prompt.ObjectText = "Miner Mike"
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.HoldDuration = 0
+	prompt.Parent = mikeRoot
+end
 
 mikeClick.MouseClick:Connect(function(player)
 	questRemote:FireClient(player, "OpenDialog", "Miner Mike")
 end)
 
+-- Also handle ProximityPrompt for mobile/console
+if mikeRoot then
+	local pp = mikeRoot:FindFirstChildOfClass("ProximityPrompt")
+	if pp then
+		pp.Triggered:Connect(function(player)
+			questRemote:FireClient(player, "OpenDialog", "Miner Mike")
+		end)
+	end
+end
+
 print("[QuestManager] Quest system loaded with", #QuestSystem.Quests, "quests")
-print("[QuestManager] Miner Mike spawned at", mikePosition)
+print("[QuestManager] Miner Mike spawned next to sell area at", mikePosition)
